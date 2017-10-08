@@ -22,6 +22,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"zpass-lib/crypt"
 )
 
 var cfgFile string
@@ -50,13 +51,18 @@ func Execute() {
 	}
 }
 
-func init() { 
+func init() {
 	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(setDefaultConfig)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.zpass-client.yaml)")
+	RootCmd.PersistentFlags().String("server", "localhost", "Server to connect to")
+	viper.BindPFlag("server", RootCmd.PersistentFlags().Lookup("server"))
+	RootCmd.PersistentFlags().Int("port", 8080, "Port to connect to")
+	viper.BindPFlag("port", RootCmd.PersistentFlags().Lookup("port"))
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -78,7 +84,8 @@ func initConfig() {
 
 		// Search config in home directory with name ".zpass-client" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".zpass-client")
+		viper.AddConfigPath(".")
+		viper.SetConfigName("zpass-client")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
@@ -87,4 +94,12 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func setDefaultConfig() {
+	viper.SetDefault("Hasher", "sha512")
+	viper.SetDefault("Crypter", "chacha20poly1305")
+
+	crypt.ConfigHasher = viper.GetString("Hasher")
+	crypt.ConfigCrypter = viper.GetString("Crypter")
 }

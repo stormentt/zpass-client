@@ -30,20 +30,25 @@ var (
 )
 
 func checkErr(err error) {
-	log.Fatal(err)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
-func Initialize(path string, authKey []byte) {
+func Initialize(path string) {
 	cLog := log.WithFields(log.Fields{
 		"path": path,
 	})
 
 	cLog.Info("Initializing KeyVault")
 	crypter := crypt.NewCrypter(nil, nil)
-	encryptKey := crypter.GenKey()
+	hasher := crypt.NewHasher(nil, nil)
+	EncryptionKey = crypter.GenKey()
+	AuthenticationKey = hasher.GenKey()
+
 	var keys KeyPair
-	keys.EncryptionKey = util.EncodeB64(encryptKey)
-	keys.AuthenticationKey = util.EncodeB64(authKey)
+	keys.EncryptionKey = util.EncodeB64(EncryptionKey)
+	keys.AuthenticationKey = util.EncodeB64(AuthenticationKey)
 
 	keypairJson, err := util.EncodeJson(keys)
 	checkErr(err)
