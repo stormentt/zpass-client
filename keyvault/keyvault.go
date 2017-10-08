@@ -21,7 +21,6 @@ type KeyVault struct {
 	//R                int
 	//P                int
 	KDFSalt          string `json:"kdf-salt"`
-	KeyPairNonce     string `json:"key-pair-nonce"`
 	EncryptedKeyPair string `json:"encrypted-key-pair"`
 }
 
@@ -73,11 +72,10 @@ func Initialize(path string, authKey []byte) {
 	var keyVault KeyVault
 	keyVault.KDFSalt = saltB64
 
-	encryptedKeyPair, keypairNonce, err := crypter.Encrypt([]byte(keypairJson))
+	encryptedKeyPair, err := crypter.Encrypt([]byte(keypairJson))
 	checkErr(err)
 
 	keyVault.EncryptedKeyPair = util.EncodeB64(encryptedKeyPair)
-	keyVault.KeyPairNonce = util.EncodeB64(keypairNonce)
 }
 
 func Open(path string) {
@@ -106,9 +104,6 @@ func Open(path string) {
 	kdfsalt, err := util.DecodeB64(keyVault.KDFSalt)
 	checkErr(err)
 
-	nonce, err := util.DecodeB64(keyVault.KeyPairNonce)
-	checkErr(err)
-
 	fmt.Println("Enter KeyVault password: ")
 	password, err := terminal.ReadPassword(0)
 	checkErr(err)
@@ -120,7 +115,7 @@ func Open(path string) {
 	crypter.SetKeys(key, nil)
 
 	cLog.Info("Decrypting KeyPair")
-	decrypted, err := crypter.Decrypt(encrypted, nonce)
+	decrypted, err := crypter.Decrypt(encrypted)
 	checkErr(err)
 
 	var Keys KeyPair
