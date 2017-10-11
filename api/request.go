@@ -77,7 +77,7 @@ func (r *Request) HMAC() *Request {
 }
 
 func (r *Request) Nonce() *Request {
-	nonce := nonces.Make()
+	nonce, _ := nonces.Make()
 	r.Set("nonce", nonce)
 	return r
 }
