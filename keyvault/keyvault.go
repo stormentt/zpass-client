@@ -43,8 +43,8 @@ func Initialize(path string) {
 	cLog.Info("Initializing KeyVault")
 	crypter := crypt.NewCrypter(nil, nil)
 	hasher := crypt.NewHasher(nil, nil)
-	EncryptionKey = crypter.GenKey()
-	AuthenticationKey = hasher.GenKey()
+	EncryptionKey, _ = crypter.GenKey()
+	AuthenticationKey, _ = hasher.GenKey()
 
 	var keys KeyPair
 	keys.EncryptionKey = util.EncodeB64(EncryptionKey)
