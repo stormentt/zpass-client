@@ -90,6 +90,7 @@ func (r *Request) Send() (*http.Response, error) {
 	req, _ := http.NewRequest(r.Method, url, bytes.NewBuffer([]byte(r.Payload)))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Content-HMAC", r.MAC)
+	req.Header.Set("Device-Selector", keyvault.DeviceSelector)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
