@@ -4,133 +4,145 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
-	"io/ioutil"
 	"os"
+	"zpass-lib/canister"
 	"zpass-lib/crypt"
-	"zpass-lib/util"
 )
-
-type KeyPair struct {
-	EncryptionKey     string
-	AuthenticationKey string
-}
-
-type KeyVault struct {
-	//TODO: Implement NRP params in zpass-lib/util/crypt
-	//N                int
-	//R                int
-	//P                int
-	KDFSalt          string `json:"kdf-salt"`
-	EncryptedKeyPair string `json:"encrypted-key-pair"`
-}
 
 var (
 	EncryptionKey     []byte
 	AuthenticationKey []byte
+	DeviceSelector    string
+	vaultCrypter      crypt.Crypter
+	kdfSalt           []byte
+	vaultPath         string
 )
 
-func checkErr(err error) {
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+func Save() error {
+	return Write(vaultPath)
 }
-
-func Initialize(path string) {
+func Write(path string) error {
 	cLog := log.WithFields(log.Fields{
 		"path": path,
 	})
 
-	cLog.Info("Initializing KeyVault")
-	crypter := crypt.NewCrypter(nil, nil)
-	hasher := crypt.NewHasher(nil, nil)
-	EncryptionKey, _ = crypter.GenKey()
-	AuthenticationKey, _ = hasher.GenKey()
+	cLog.Info("Writing KeyVault")
+	keyCan := canister.New()
+	keyCan.
+		Set("encryptionKey", EncryptionKey).
+		Set("authenticationKey", AuthenticationKey).
+		Set("deviceSelector", DeviceSelector)
+	keyCanJson, err := keyCan.ToJson()
+	if err != nil {
+		return err
+	}
 
-	var keys KeyPair
-	keys.EncryptionKey = util.EncodeB64(EncryptionKey)
-	keys.AuthenticationKey = util.EncodeB64(AuthenticationKey)
+	encryptedKeyCan, err := vaultCrypter.Encrypt([]byte(keyCanJson))
+	if err != nil {
+		return err
+	}
 
-	keypairJson, err := util.EncodeJson(keys)
-	checkErr(err)
+	vaultCan := canister.New()
+	vaultCan.
+		Set("kdfSalt", kdfSalt).
+		Set("keyVault", encryptedKeyCan)
+
+	vault, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	_, err = vaultCan.Release(vault)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Create(path string) error {
+	cLog := log.WithFields(log.Fields{
+		"path": path,
+	})
+	cLog.Info("Creating keyvault")
+	vaultPath = path
+	tmpCrypter := crypt.NewCrypter(nil, nil)
+	tmpHasher := crypt.NewHasher(nil, nil)
+	EncryptionKey, _ = tmpCrypter.GenKey()
+	AuthenticationKey, _ = tmpHasher.GenKey()
 
 	var password string
 	match := false
 	for match == false {
 		fmt.Println("Enter new KeyVault Encryption Key: ")
-		password1, err := terminal.ReadPassword(0)
-		checkErr(err)
+		password1, _ := terminal.ReadPassword(0)
 
 		fmt.Println("Confirm new KeyVault Encryption Key: ")
-		password2, err := terminal.ReadPassword(0)
-		checkErr(err)
+		password2, _ := terminal.ReadPassword(0)
 
 		match = (string(password1) == string(password2))
 		password = string(password1)
 	}
 
-	wrapKey, salt, err := crypter.DeriveKey(password)
-	checkErr(err)
-	saltB64 := util.EncodeB64(salt)
+	vaultCrypter = crypt.NewCrypter(nil, nil)
+	wrapKey, salt, err := vaultCrypter.DeriveKey(password)
+	if err != nil {
+		return err
+	}
 
-	crypter.SetKeys(wrapKey, nil)
+	vaultCrypter.SetKeys(wrapKey, nil)
+	kdfSalt = salt
 
-	var keyVault KeyVault
-	keyVault.KDFSalt = saltB64
-
-	encryptedKeyPair, err := crypter.Encrypt([]byte(keypairJson))
-	checkErr(err)
-
-	keyVault.EncryptedKeyPair = util.EncodeB64(encryptedKeyPair)
+	return Write(path)
 }
 
-func Open(path string) {
+func Open(path string) error {
+	vaultPath = path
+	vaultCrypter = crypt.NewCrypter(nil, nil)
 	cLog := log.WithFields(log.Fields{
 		"path": path,
 	})
+	cLog.Info("Opening keyvault")
 
-	cLog.Info("Opening KeyVault")
-	vault, err := os.Open(path)
-	checkErr(err)
-	defer vault.Close()
+	vaultCan, err := canister.FillFrom(path)
+	if err != nil {
+		return err
+	}
 
-	cLog.Info("Reading KeyVault")
-	vaultBody, err := ioutil.ReadAll(vault)
-	checkErr(err)
+	kdfSalt, err = vaultCan.GetBytes("kdfSalt")
+	if err != nil {
+		return err
+	}
 
-	cLog.Info("Decoding KeyVault to JSON")
-	var keyVault KeyVault
-	err = util.DecodeJson(string(vaultBody), &keyVault)
-	checkErr(err)
+	encryptedKeyCan, err := vaultCan.GetBytes("keyVault")
+	if err != nil {
+		return err
+	}
 
-	cLog.Info("Decoding base64 values")
-	encrypted, err := util.DecodeB64(keyVault.EncryptedKeyPair)
-	checkErr(err)
+	input, _ := terminal.ReadPassword(0)
+	password := string(input)
 
-	kdfsalt, err := util.DecodeB64(keyVault.KDFSalt)
-	checkErr(err)
+	wrapKey, err := vaultCrypter.CalcKey(password, kdfSalt)
+	if err != nil {
+		return err
+	}
 
-	fmt.Println("Enter KeyVault password: ")
-	password, err := terminal.ReadPassword(0)
-	checkErr(err)
+	vaultCrypter.SetKeys(wrapKey, nil)
 
-	crypter := crypt.NewCrypter(nil, nil)
-	cLog.Info("Deriving Key")
-	key, err := crypter.CalcKey(string(password), kdfsalt)
-	checkErr(err)
-	crypter.SetKeys(key, nil)
+	keyCanJson, err := vaultCrypter.Decrypt(encryptedKeyCan)
+	if err != nil {
+		return err
+	}
 
-	cLog.Info("Decrypting KeyPair")
-	decrypted, err := crypter.Decrypt(encrypted)
-	checkErr(err)
+	keyCan, err := canister.Fill(string(keyCanJson))
+	if err != nil {
+		return err
+	}
 
-	var Keys KeyPair
-	err = util.DecodeJson(string(decrypted), &Keys)
-	checkErr(err)
+	AuthenticationKey, _ = keyCan.GetBytes("authenticationKey")
+	EncryptionKey, _ = keyCan.GetBytes("encryptionKey")
+	DeviceSelector, _ = keyCan.GetString("deviceSelector")
+	log.Error(DeviceSelector)
 
-	EncryptionKey, err = util.DecodeB64(Keys.EncryptionKey)
-	checkErr(err)
-	AuthenticationKey, err = util.DecodeB64(Keys.AuthenticationKey)
-	checkErr(err)
-
-	cLog.Info("Opened Vault")
+	return nil
 }
