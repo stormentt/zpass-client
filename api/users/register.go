@@ -7,11 +7,16 @@ import (
 	"io/ioutil"
 	"zpass-client/api"
 	"zpass-client/keyvault"
+	"zpass-lib/canister"
 )
 
 func Register() {
 	log.Info("Registering")
-	keyvault.Initialize(viper.GetString("keyvault-path"))
+	err := keyvault.Create(viper.GetString("keyvault-path"))
+	if err != nil {
+		log.Error(err)
+		return
+	}
 	req := api.NewRequest()
 	req.
 		Dest("users", "POST").
@@ -29,10 +34,24 @@ func Register() {
 		log.WithFields(log.Fields{
 			"code":    response.StatusCode,
 			"headers": response.Header,
-			"body":    body,
+			"body":    string(body),
 		}).Error("Received non-success code")
 		return
 	}
 
+	can, err := canister.Fill(string(body))
+	if err != nil {
+		log.WithFields(log.Fields{
+			"body":  string(body),
+			"error": err,
+		}).Error("Unable to decode json")
+		return
+	}
+
+	//TODO: Nonce & HMAC validation
+	deviceSelector, _ := can.GetString("deviceSelector")
+	keyvault.DeviceSelector = deviceSelector
+	keyvault.Save()
 	fmt.Println(string(body))
+	fmt.Println(deviceSelector)
 }
