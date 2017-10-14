@@ -92,12 +92,8 @@ Zpass-lib has tests though.
 
 * [Cobra](https://github.com/spf13/cobra)
 * [Viper](https://github.com/spf13/viper)
-* [Cast](https://github.com/spf13/cast)
 * [Logrus](https://github.com/sirupsen/logrus)
-* [Negroni](https://github.com/urfave/negroni)
-* [Gorilla](https://github.com/gorilla/mux)
 * [Homedir](https://github.com/mitchellh/go-homedir)
-* [Gorm](https://github.com/jinzhu/gorm)
 * [zpass-lib](https://github.com/stormentt/zpass-lib)
 
 ## Contributing
