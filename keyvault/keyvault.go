@@ -10,12 +10,13 @@ import (
 )
 
 var (
-	EncryptionKey     []byte
+	encryptionKey     []byte
 	AuthenticationKey []byte
 	DeviceSelector    string
 	vaultCrypter      crypt.Crypter
 	kdfSalt           []byte
 	vaultPath         string
+	PassCrypter       crypt.Crypter
 )
 
 func Save() error {
@@ -29,7 +30,7 @@ func Write(path string) error {
 	cLog.Info("Writing KeyVault")
 	keyCan := canister.New()
 	keyCan.
-		Set("encryptionKey", EncryptionKey).
+		Set("encryptionKey", encryptionKey).
 		Set("authenticationKey", AuthenticationKey).
 		Set("deviceSelector", DeviceSelector)
 	keyCanJson, err := keyCan.ToJson()
@@ -52,7 +53,7 @@ func Write(path string) error {
 		return err
 	}
 
-	_, err = vaultCan.Release(vault)
+	err = vaultCan.Release(vault)
 	if err != nil {
 		return err
 	}
@@ -68,7 +69,7 @@ func Create(path string) error {
 	vaultPath = path
 	tmpCrypter := crypt.NewCrypter(nil, nil)
 	tmpHasher := crypt.NewHasher(nil, nil)
-	EncryptionKey, _ = tmpCrypter.GenKey()
+	encryptionKey, _ = tmpCrypter.GenKey()
 	AuthenticationKey, _ = tmpHasher.GenKey()
 
 	var password string
@@ -92,6 +93,8 @@ func Create(path string) error {
 
 	vaultCrypter.SetKeys(wrapKey, nil)
 	kdfSalt = salt
+
+	PassCrypter = crypt.NewCrypter(encryptionKey, nil)
 
 	return Write(path)
 }
@@ -140,9 +143,11 @@ func Open(path string) error {
 	}
 
 	AuthenticationKey, _ = keyCan.GetBytes("authenticationKey")
-	EncryptionKey, _ = keyCan.GetBytes("encryptionKey")
+	encryptionKey, _ = keyCan.GetBytes("encryptionKey")
 	DeviceSelector, _ = keyCan.GetString("deviceSelector")
 	log.Error(DeviceSelector)
+
+	PassCrypter = crypt.NewCrypter(encryptionKey, nil)
 
 	return nil
 }
