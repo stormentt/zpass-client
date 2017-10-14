@@ -1,12 +1,11 @@
 package keyvault
 
 import (
-	"fmt"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/crypto/ssh/terminal"
 	"os"
 	"zpass-lib/canister"
 	"zpass-lib/crypt"
+	"zpass-lib/util"
 )
 
 var (
@@ -75,11 +74,9 @@ func Create(path string) error {
 	var password string
 	match := false
 	for match == false {
-		fmt.Println("Enter new KeyVault Encryption Key: ")
-		password1, _ := terminal.ReadPassword(0)
+		password1, _ := util.AskPass("Enter new KeyVault Encryption Key: ")
 
-		fmt.Println("Confirm new KeyVault Encryption Key: ")
-		password2, _ := terminal.ReadPassword(0)
+		password2, _ := util.AskPass("Repeat new KeyVault Encryption Key: ")
 
 		match = (string(password1) == string(password2))
 		password = string(password1)
@@ -122,7 +119,7 @@ func Open(path string) error {
 		return err
 	}
 
-	input, _ := terminal.ReadPassword(0)
+	input, _ := util.AskPass("Enter KeyVault Encryption Key: ")
 	password := string(input)
 
 	wrapKey, err := vaultCrypter.CalcKey(password, kdfSalt)
@@ -145,7 +142,6 @@ func Open(path string) error {
 	AuthenticationKey, _ = keyCan.GetBytes("authenticationKey")
 	encryptionKey, _ = keyCan.GetBytes("encryptionKey")
 	DeviceSelector, _ = keyCan.GetString("deviceSelector")
-	log.Error(DeviceSelector)
 
 	PassCrypter = crypt.NewCrypter(encryptionKey, nil)
 
