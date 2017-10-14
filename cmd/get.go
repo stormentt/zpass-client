@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -25,13 +26,8 @@ import (
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Get something from the server",
+	Long:  `zpass get password [selector]`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := keyvault.Open(viper.GetString("keyvault-path"))
 		if err != nil {
@@ -44,7 +40,8 @@ to quickly create a Cobra application.`,
 			switch getType {
 			case "password":
 				selector := args[1]
-				passwords.Get(selector)
+				password := passwords.Get(selector)
+				fmt.Println(password)
 			}
 		}
 	},

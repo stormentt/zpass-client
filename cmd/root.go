@@ -30,13 +30,19 @@ var cfgFile string
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "zpass-client",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Client program for the zpass storage server",
+	Long: `zpass-client is used to connect to a running zpass server.
+	
+	The client looks for its config file in ./zpass-client.json
+	
+	Config file options:
+	keyvault-path
+		Path to the zpass keyvault. This is where zpass will store your password encryption key & device authentication information.
+	server 
+		The remote server to connect to
+	port 
+		The remote port to connect to
+	`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
