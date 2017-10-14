@@ -15,8 +15,14 @@
 package cmd
 
 import (
+	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"zpass-client/api/passwords"
+	"zpass-client/keyvault"
+	"zpass-lib/random"
+	"zpass-lib/util"
 )
 
 // addCmd represents the add command
@@ -30,12 +36,31 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		passwords.Store()
+		err := keyvault.Open(viper.GetString("keyvault-path"))
+		if err != nil {
+			log.Error(err)
+			return
+		}
+
+		if len(args) > 0 {
+			addType := args[0]
+			switch addType {
+			case "password":
+				if viper.GetBool("generate") == true {
+					password, _ := random.AlphaNum(32)
+					passwords.Store(password)
+					fmt.Println(password)
+				} else {
+					password, _ := util.AskPass("New Password: ")
+					passwords.Store(password)
+				}
+			}
+		}
 	},
 }
 
 func init() {
-	passwordCmd.AddCommand(addCmd)
+	RootCmd.AddCommand(addCmd)
 
 	// Here you will define your flags and configuration settings.
 
@@ -45,5 +70,6 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// addCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	addCmd.Flags().BoolP("generate", "g", false, "Whether or not to generate the password")
+	viper.BindPFlag("generate", addCmd.Flags().Lookup("generate"))
 }
