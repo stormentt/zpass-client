@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/viper"
 	"net/http"
 	"strconv"
-	"zpass-client/keyvault"
-	"zpass-lib/crypt"
-	"zpass-lib/nonces"
-	"zpass-lib/util"
+	"github.com/stormentt/zpass-client/keyvault"
+	"github.com/stormentt/zpass-lib/crypt"
+	"github.com/stormentt/zpass-lib/nonces"
+	"github.com/stormentt/zpass-lib/util"
 )
 
 type Request struct {

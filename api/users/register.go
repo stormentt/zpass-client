@@ -5,9 +5,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io/ioutil"
-	"zpass-client/api"
-	"zpass-client/keyvault"
-	"zpass-lib/canister"
+	"github.com/stormentt/zpass-client/api"
+	"github.com/stormentt/zpass-client/keyvault"
+	"github.com/stormentt/zpass-lib/canister"
 )
 
 func Register() {

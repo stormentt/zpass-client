@@ -16,7 +16,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"zpass-client/api/users"
+	"github.com/stormentt/zpass-client/api/users"
 )
 
 // registerCmd represents the register command

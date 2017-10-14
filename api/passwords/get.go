@@ -4,9 +4,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"zpass-client/api"
-	"zpass-client/keyvault"
-	"zpass-lib/canister"
+	"github.com/stormentt/zpass-client/api"
+	"github.com/stormentt/zpass-client/keyvault"
+	"github.com/stormentt/zpass-lib/canister"
 )
 
 func Get(selector string) string {

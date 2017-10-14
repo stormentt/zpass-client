@@ -3,9 +3,9 @@ package keyvault
 import (
 	log "github.com/sirupsen/logrus"
 	"os"
-	"zpass-lib/canister"
-	"zpass-lib/crypt"
-	"zpass-lib/util"
+	"github.com/stormentt/zpass-lib/canister"
+	"github.com/stormentt/zpass-lib/crypt"
+	"github.com/stormentt/zpass-lib/util"
 )
 
 var (

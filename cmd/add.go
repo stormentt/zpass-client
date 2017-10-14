@@ -19,10 +19,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"zpass-client/api/passwords"
-	"zpass-client/keyvault"
-	"zpass-lib/random"
-	"zpass-lib/util"
+	"github.com/stormentt/zpass-client/api/passwords"
+	"github.com/stormentt/zpass-client/keyvault"
+	"github.com/stormentt/zpass-lib/random"
+	"github.com/stormentt/zpass-lib/util"
 )
 
 // addCmd represents the add command

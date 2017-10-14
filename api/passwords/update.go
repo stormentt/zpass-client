@@ -4,8 +4,8 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"zpass-client/api"
-	"zpass-client/keyvault"
+	"github.com/stormentt/zpass-client/api"
+	"github.com/stormentt/zpass-client/keyvault"
 )
 
 func Update(selector string, newPassword string) error {

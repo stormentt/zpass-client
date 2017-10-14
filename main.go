@@ -15,7 +15,7 @@
 
 package main
 
-import "zpass-client/cmd"
+import "github.com/stormentt/zpass-client/cmd"
 
 func main() {
 	cmd.Execute()
