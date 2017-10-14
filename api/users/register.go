@@ -4,12 +4,14 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"io/ioutil"
 	"github.com/stormentt/zpass-client/api"
 	"github.com/stormentt/zpass-client/keyvault"
 	"github.com/stormentt/zpass-lib/canister"
+	"io/ioutil"
 )
 
+// Register() creates a new keyvault and uses its device authentication key to register a new device & user
+// This will wipe your already-existing keyvault.
 func Register() {
 	log.Info("Registering")
 	err := keyvault.Create(viper.GetString("keyvault-path"))

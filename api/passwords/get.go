@@ -2,13 +2,15 @@ package passwords
 
 import (
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"net/http"
 	"github.com/stormentt/zpass-client/api"
 	"github.com/stormentt/zpass-client/keyvault"
 	"github.com/stormentt/zpass-lib/canister"
+	"io/ioutil"
+	"net/http"
 )
 
+// Get returns the decrypted form of the requested password.
+// If there is an error or the password is empty, it'll return an empty string.
 func Get(selector string) string {
 	log.Info("getting password")
 	req := api.NewRequest()

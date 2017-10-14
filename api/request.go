@@ -5,52 +5,63 @@ import (
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"net/http"
-	"strconv"
 	"github.com/stormentt/zpass-client/keyvault"
 	"github.com/stormentt/zpass-lib/crypt"
 	"github.com/stormentt/zpass-lib/nonces"
 	"github.com/stormentt/zpass-lib/util"
+	"net/http"
+	"strconv"
 )
 
+//Request is a struct representing a request to the API
 type Request struct {
-	StatusCode  int
-	Map         map[string]interface{}
-	Payload     string
-	MAC         string
+	//Map is the actual request information
+	Map map[string]interface{}
+	//Payload is what we're going to send the endpoint
+	Payload string
+	//MAC is the HMAC digest of Payload
+	MAC string
+	//Destination is the path to send to
 	Destination string
-	Method      string
+	//Method is what http method to use
+	Method string
 }
 
+// NewRequest returns a blank api request
 func NewRequest() *Request {
 	var request Request
 	request.Map = make(map[string]interface{})
 	return &request
 }
 
+// Dest sets the destination endpoint & the method for the request
 func (r *Request) Dest(dest, method string) *Request {
 	r.Destination = dest
 	r.Method = method
 	return r
 }
 
+// Set stores the given value in the payload map
 func (r *Request) Set(property string, value interface{}) *Request {
 	r.Map[property] = value
 	return r
 }
 
+// SetBytes does the same thing as Set, but it encodes the value to base64 first
 func (r *Request) SetBytes(property string, value []byte) *Request {
 	b64 := util.EncodeB64(value)
 	r.Map[property] = b64
 	return r
 }
 
+// JSON encodes the request's payload map
 func (r *Request) Json() *Request {
 	json, _ := util.EncodeJson(r.Map)
 	r.Payload = json
 	return r
 }
 
+// Compact compacts the payload string to form a smaller payload
 func (r *Request) Compact() *Request {
 	var b bytes.Buffer
 	json.Compact(&b, []byte(r.Payload))
@@ -58,10 +69,12 @@ func (r *Request) Compact() *Request {
 	return r
 }
 
+// CompactJSON calls both Json and Compact
 func (r *Request) CompactJson() *Request {
 	return r.Json().Compact()
 }
 
+//HMAC calculates the HMAC digest of the payload string
 func (r *Request) HMAC() *Request {
 	hasher := crypt.NewHasher(keyvault.AuthenticationKey, nil)
 	hmac := hasher.Digest([]byte(r.Payload))
@@ -76,12 +89,14 @@ func (r *Request) HMAC() *Request {
 	return r
 }
 
+//Nonce creates a nonce & stores it in the payload map
 func (r *Request) Nonce() *Request {
 	nonce, _ := nonces.Make()
 	r.Set("nonce", nonce)
 	return r
 }
 
+//Send connects to the server & sends the payload string, returning an http.Response on success
 func (r *Request) Send() (*http.Response, error) {
 	r.Nonce().CompactJson().HMAC()
 

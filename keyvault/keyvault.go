@@ -2,10 +2,10 @@ package keyvault
 
 import (
 	log "github.com/sirupsen/logrus"
-	"os"
 	"github.com/stormentt/zpass-lib/canister"
 	"github.com/stormentt/zpass-lib/crypt"
 	"github.com/stormentt/zpass-lib/util"
+	"os"
 )
 
 var (
@@ -18,9 +18,12 @@ var (
 	PassCrypter       crypt.Crypter
 )
 
+//Save saves whatever changes may have been made to the keyvault
 func Save() error {
 	return Write(vaultPath)
 }
+
+//Write writes out the current keyvault state to an encrypted file
 func Write(path string) error {
 	cLog := log.WithFields(log.Fields{
 		"path": path,
@@ -60,6 +63,7 @@ func Write(path string) error {
 	return nil
 }
 
+//Create creates a new keyvault & generates encryption keys
 func Create(path string) error {
 	cLog := log.WithFields(log.Fields{
 		"path": path,

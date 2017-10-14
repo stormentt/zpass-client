@@ -3,11 +3,12 @@ package passwords
 import (
 	"errors"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 	"github.com/stormentt/zpass-client/api"
 	"github.com/stormentt/zpass-client/keyvault"
+	"net/http"
 )
 
+// Store saves the given password to the server
 func Store(password string) error {
 	log.Info("storing password")
 

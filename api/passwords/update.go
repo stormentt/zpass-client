@@ -3,11 +3,12 @@ package passwords
 import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 	"github.com/stormentt/zpass-client/api"
 	"github.com/stormentt/zpass-client/keyvault"
+	"net/http"
 )
 
+// Update changes the password refered to by selector to newPassword
 func Update(selector string, newPassword string) error {
 	log.Info("Updating password")
 	encrypted, _ := keyvault.PassCrypter.Encrypt([]byte(newPassword))
