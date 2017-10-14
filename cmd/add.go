@@ -47,7 +47,7 @@ to quickly create a Cobra application.`,
 			switch addType {
 			case "password":
 				if viper.GetBool("generate") == true {
-					password, _ := random.AlphaNum(32)
+					password, _ := random.AlphaNum(viper.GetInt("pw-length"))
 					passwords.Store(password)
 					fmt.Println(password)
 				} else {
@@ -72,4 +72,7 @@ func init() {
 	// is called directly, e.g.:
 	addCmd.Flags().BoolP("generate", "g", false, "Whether or not to generate the password")
 	viper.BindPFlag("generate", addCmd.Flags().Lookup("generate"))
+
+	addCmd.Flags().IntP("length", "l", 32, "Length of the generated password")
+	viper.BindPFlag("pw-length", addCmd.Flags().Lookup("length"))
 }
