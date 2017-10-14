@@ -1,7 +1,6 @@
 package passwords
 
 import (
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -9,25 +8,6 @@ import (
 	"zpass-client/keyvault"
 	"zpass-lib/canister"
 )
-
-func Store(password string) {
-	log.Info("storing password")
-
-	encrypted, _ := keyvault.PassCrypter.Encrypt([]byte(password))
-	req := api.NewRequest()
-	req.
-		Dest("passwords", "POST").
-		Set("password", encrypted)
-	response, err := req.Send()
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	defer response.Body.Close()
-	body, _ := ioutil.ReadAll(response.Body)
-	fmt.Println(string(body))
-}
 
 func Get(selector string) string {
 	log.Info("getting password")
@@ -41,7 +21,6 @@ func Get(selector string) string {
 
 	defer response.Body.Close()
 
-	fmt.Println(response.StatusCode)
 	if response.StatusCode != http.StatusOK {
 		return ""
 	}
@@ -50,9 +29,11 @@ func Get(selector string) string {
 	if err != nil {
 		return ""
 	}
-	fmt.Println(string(body))
-	pass, _ := can.GetBytes("password.Data.Bytes")
+	pass, err := can.GetBytes("password.data.bytes")
+	if err != nil {
+		log.Error(err)
+		return ""
+	}
 	decrypted, _ := keyvault.PassCrypter.Decrypt(pass)
-	fmt.Println(string(decrypted))
-	return ""
+	return string(decrypted)
 }
