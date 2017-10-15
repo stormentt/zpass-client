@@ -47,6 +47,7 @@ go get -u github.com/stormentt/zpass-client
 Create a file ~/zpass-client.yaml with an example config:
 ```
 keyvault-path: keyvault.json
+index-path: index-file
 server: localhost
 port: 8080
 ```
@@ -63,7 +64,8 @@ Zpass will ask you for a password to encrypt your keyvault with. After that it w
 ```
 zpass-client add password
 ```
-Zpass will ask you for your keyvault password and then prompt you to enter in a new password. Soon, passwords will be able to have human-readable names instead of long random alphanumeric selectors.
+Zpass will ask you for your keyvault password and then prompt you to enter in a new password. 
+It will also ask you to specify a password name, which you can later use to retrieve the password.
 
 ### Generating a password
 ```
@@ -73,9 +75,11 @@ This will generate a random alphanumeric password [length] characters long. If y
 
 ### Retrieving a password
 ```
-zpass-client get password [selector]
+zpass-client get password -n [password name] -s [password selector]
 ```
 This will attempt to retrieve your password from the storage server & print it to STDOUT.
+
+You can provide either a name or a selector
 
 ### Updating a password
 ```
