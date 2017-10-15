@@ -15,11 +15,11 @@
 package cmd
 
 import (
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stormentt/zpass-client/api/passwords"
+	"github.com/stormentt/zpass-client/index"
 	"github.com/stormentt/zpass-client/keyvault"
 	"github.com/stormentt/zpass-lib/random"
 	"github.com/stormentt/zpass-lib/util"
@@ -37,18 +37,35 @@ var addCmd = &cobra.Command{
 			return
 		}
 
+		err = index.Open(viper.GetString("index-path"))
+		if err != nil {
+			return
+		}
+
 		if len(args) > 0 {
 			addType := args[0]
 			switch addType {
 			case "password":
+				pwName := viper.GetString("pw-name")
+				if pwName == "" {
+					pwName, _ = util.AskPass("Password Name: ")
+				}
+
+				selector := ""
 				if viper.GetBool("generate") == true {
 					password, _ := random.AlphaNum(viper.GetInt("pw-length"))
-					passwords.Store(password)
-					fmt.Println(password)
+					selector, _ = passwords.Store(password)
 				} else {
 					password, _ := util.AskPass("New Password: ")
-					passwords.Store(password)
+					selector, _ = passwords.Store(password)
 				}
+				log.WithFields(log.Fields{
+					"name":     pwName,
+					"selector": selector,
+				}).Info("Adding pw")
+				index.Add(pwName, selector)
+
+				index.Save(viper.GetString("index-path"))
 			}
 		}
 	},
@@ -70,4 +87,7 @@ func init() {
 
 	addCmd.Flags().IntP("length", "l", 32, "Length of the generated password")
 	viper.BindPFlag("pw-length", addCmd.Flags().Lookup("length"))
+
+	addCmd.Flags().StringP("name", "n", "", "Name of the password to add")
+	viper.BindPFlag("pw-name", addCmd.Flags().Lookup("name"))
 }

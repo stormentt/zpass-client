@@ -12,7 +12,7 @@ var (
 	encryptionKey     []byte
 	AuthenticationKey []byte
 	DeviceSelector    string
-	vaultCrypter      crypt.Crypter
+	VaultCrypter      crypt.Crypter
 	kdfSalt           []byte
 	vaultPath         string
 	PassCrypter       crypt.Crypter
@@ -40,7 +40,7 @@ func Write(path string) error {
 		return err
 	}
 
-	encryptedKeyCan, err := vaultCrypter.Encrypt([]byte(keyCanJson))
+	encryptedKeyCan, err := VaultCrypter.Encrypt([]byte(keyCanJson))
 	if err != nil {
 		return err
 	}
@@ -86,13 +86,13 @@ func Create(path string) error {
 		password = string(password1)
 	}
 
-	vaultCrypter = crypt.NewCrypter(nil, nil)
-	wrapKey, salt, err := vaultCrypter.DeriveKey(password)
+	VaultCrypter = crypt.NewCrypter(nil, nil)
+	wrapKey, salt, err := VaultCrypter.DeriveKey(password)
 	if err != nil {
 		return err
 	}
 
-	vaultCrypter.SetKeys(wrapKey, nil)
+	VaultCrypter.SetKeys(wrapKey, nil)
 	kdfSalt = salt
 
 	PassCrypter = crypt.NewCrypter(encryptionKey, nil)
@@ -102,7 +102,7 @@ func Create(path string) error {
 
 func Open(path string) error {
 	vaultPath = path
-	vaultCrypter = crypt.NewCrypter(nil, nil)
+	VaultCrypter = crypt.NewCrypter(nil, nil)
 	cLog := log.WithFields(log.Fields{
 		"path": path,
 	})
@@ -126,14 +126,14 @@ func Open(path string) error {
 	input, _ := util.AskPass("Enter KeyVault Encryption Key: ")
 	password := string(input)
 
-	wrapKey, err := vaultCrypter.CalcKey(password, kdfSalt)
+	wrapKey, err := VaultCrypter.CalcKey(password, kdfSalt)
 	if err != nil {
 		return err
 	}
 
-	vaultCrypter.SetKeys(wrapKey, nil)
+	VaultCrypter.SetKeys(wrapKey, nil)
 
-	keyCanJson, err := vaultCrypter.Decrypt(encryptedKeyCan)
+	keyCanJson, err := VaultCrypter.Decrypt(encryptedKeyCan)
 	if err != nil {
 		return err
 	}

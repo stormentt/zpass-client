@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stormentt/zpass-client/api/passwords"
+	"github.com/stormentt/zpass-client/index"
 	"github.com/stormentt/zpass-client/keyvault"
 )
 
@@ -27,7 +28,7 @@ import (
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get something from the server",
-	Long:  `zpass get password [selector]`,
+	Long:  `zpass get password [password name]`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := keyvault.Open(viper.GetString("keyvault-path"))
 		if err != nil {
@@ -35,12 +36,24 @@ var getCmd = &cobra.Command{
 			return
 		}
 
-		if len(args) > 1 {
+		err = index.Open(viper.GetString("index-path"))
+		if err != nil {
+			return
+		}
+
+		if len(args) > 0 {
 			getType := args[0]
 			switch getType {
 			case "password":
-				selector := args[1]
-				password := passwords.Get(selector)
+				name := viper.GetString("pw-name")
+				selector := viper.GetString("pw-selector")
+				password := ""
+				if name != "" {
+					selector, _ := index.Get(name)
+					password = passwords.Get(selector)
+				} else if selector != "" {
+					password = passwords.Get(selector)
+				}
 				fmt.Println(password)
 			}
 		}
@@ -58,5 +71,9 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	getCmd.Flags().StringP("name", "n", "", "Password name to retrieve")
+	viper.BindPFlag("pw-name", getCmd.Flags().Lookup("name"))
+
+	getCmd.Flags().StringP("selector", "s", "", "Password selector to retrieve")
+	viper.BindPFlag("pw-selector", getCmd.Flags().Lookup("selector"))
 }
