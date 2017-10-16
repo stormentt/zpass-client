@@ -19,6 +19,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/stormentt/zpass-client/api/passwords"
 	"github.com/stormentt/zpass-client/index"
 	"github.com/stormentt/zpass-client/keyvault"
 )
@@ -44,7 +45,13 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			return
 		}
-		fmt.Println(index.List())
+
+		query := viper.GetBool("query")
+		if query {
+			fmt.Println(passwords.List())
+		} else {
+			fmt.Println(index.List())
+		}
 	},
 }
 
@@ -59,5 +66,8 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	//TODO: this is super clunky, migrate this to some other way. Maybe move index-reading to an index command instead
+	listCmd.Flags().BoolP("query", "q", false, "If this flag is present, the list command will query the server for a list of passwords")
+	viper.BindPFlag("query", listCmd.Flags().Lookup("query"))
+
 }
