@@ -48,7 +48,8 @@ var addCmd = &cobra.Command{
 			case "password":
 				pwName := viper.GetString("pw-name")
 				if pwName == "" {
-					pwName, _ = util.AskPass("Password Name: ")
+					input, _ := util.AskPass("Password Name: ")
+					pwName = string(input)
 				}
 
 				selector := ""
@@ -57,7 +58,7 @@ var addCmd = &cobra.Command{
 					selector, _ = passwords.Store(password)
 				} else {
 					password, _ := util.AskPass("New Password: ")
-					selector, _ = passwords.Store(password)
+					selector, _ = passwords.Store(string(password))
 				}
 				log.WithFields(log.Fields{
 					"name":     pwName,

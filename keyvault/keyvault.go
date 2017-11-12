@@ -1,11 +1,13 @@
 package keyvault
 
 import (
+	"bytes"
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/stormentt/zpass-lib/canister"
 	"github.com/stormentt/zpass-lib/crypt"
 	"github.com/stormentt/zpass-lib/util"
-	"os"
 )
 
 var (
@@ -35,7 +37,7 @@ func Write(path string) error {
 		Set("encryptionKey", encryptionKey).
 		Set("authenticationKey", AuthenticationKey).
 		Set("deviceSelector", DeviceSelector)
-	keyCanJson, err := keyCan.ToJson()
+	keyCanJson, err := keyCan.ToJSON()
 	if err != nil {
 		return err
 	}
@@ -70,39 +72,38 @@ func Create(path string) error {
 	})
 	cLog.Info("Creating keyvault")
 	vaultPath = path
-	tmpCrypter := crypt.NewCrypter(nil, nil)
-	tmpHasher := crypt.NewHasher(nil, nil)
+	tmpCrypter, _ := crypt.NewCrypter(nil, nil)
+	tmpHasher, _ := crypt.NewHasher(nil, nil)
 	encryptionKey, _ = tmpCrypter.GenKey()
 	AuthenticationKey, _ = tmpHasher.GenKey()
 
-	var password string
+	var password []byte
 	match := false
 	for match == false {
 		password1, _ := util.AskPass("Enter new KeyVault Encryption Key: ")
 
 		password2, _ := util.AskPass("Repeat new KeyVault Encryption Key: ")
 
-		match = (string(password1) == string(password2))
-		password = string(password1)
+		match = bytes.Equal(password1, password2)
+		password = password1
 	}
 
-	VaultCrypter = crypt.NewCrypter(nil, nil)
-	wrapKey, salt, err := VaultCrypter.DeriveKey(password)
+	VaultCrypter, _ = crypt.NewCrypter(nil, nil)
+	salt, err := VaultCrypter.DeriveKey(password)
 	if err != nil {
 		return err
 	}
 
-	VaultCrypter.SetKeys(wrapKey, nil)
 	kdfSalt = salt
 
-	PassCrypter = crypt.NewCrypter(encryptionKey, nil)
+	PassCrypter, _ = crypt.NewCrypter(encryptionKey, nil)
 
 	return Write(path)
 }
 
 func Open(path string) error {
 	vaultPath = path
-	VaultCrypter = crypt.NewCrypter(nil, nil)
+	VaultCrypter, _ = crypt.NewCrypter(nil, nil)
 	cLog := log.WithFields(log.Fields{
 		"path": path,
 	})
@@ -123,15 +124,12 @@ func Open(path string) error {
 		return err
 	}
 
-	input, _ := util.AskPass("Enter KeyVault Encryption Key: ")
-	password := string(input)
+	password, _ := util.AskPass("Enter KeyVault Encryption Key: ")
 
-	wrapKey, err := VaultCrypter.CalcKey(password, kdfSalt)
+	err = VaultCrypter.CalcKey(password, kdfSalt)
 	if err != nil {
 		return err
 	}
-
-	VaultCrypter.SetKeys(wrapKey, nil)
 
 	keyCanJson, err := VaultCrypter.Decrypt(encryptedKeyCan)
 	if err != nil {
@@ -147,7 +145,7 @@ func Open(path string) error {
 	encryptionKey, _ = keyCan.GetBytes("encryptionKey")
 	DeviceSelector, _ = keyCan.GetString("deviceSelector")
 
-	PassCrypter = crypt.NewCrypter(encryptionKey, nil)
+	PassCrypter, _ = crypt.NewCrypter(encryptionKey, nil)
 
 	return nil
 }

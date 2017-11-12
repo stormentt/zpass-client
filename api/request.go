@@ -3,14 +3,15 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"strconv"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stormentt/zpass-client/keyvault"
 	"github.com/stormentt/zpass-lib/crypt"
 	"github.com/stormentt/zpass-lib/nonces"
 	"github.com/stormentt/zpass-lib/util"
-	"net/http"
-	"strconv"
 )
 
 //Request is a struct representing a request to the API
@@ -76,7 +77,7 @@ func (r *Request) CompactJson() *Request {
 
 //HMAC calculates the HMAC digest of the payload string
 func (r *Request) HMAC() *Request {
-	hasher := crypt.NewHasher(keyvault.AuthenticationKey, nil)
+	hasher, _ := crypt.NewHasher(keyvault.AuthenticationKey, nil)
 	hmac := hasher.Digest([]byte(r.Payload))
 	hmacB64 := util.EncodeB64(hmac)
 

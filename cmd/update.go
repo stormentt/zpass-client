@@ -41,7 +41,7 @@ var updateCmd = &cobra.Command{
 			case "password":
 				selector := args[1]
 				password, _ := util.AskPass("New Password: ")
-				passwords.Update(selector, password)
+				passwords.Update(selector, string(password))
 			}
 		}
 	},

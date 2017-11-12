@@ -2,11 +2,12 @@ package index
 
 import (
 	"errors"
+	"io/ioutil"
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/stormentt/zpass-client/keyvault"
 	"github.com/stormentt/zpass-lib/canister"
-	"io/ioutil"
-	"os"
 )
 
 var (
@@ -37,7 +38,7 @@ func Get(name string) (string, bool) {
 
 //List returns the json encoded version of the index
 func List() string {
-	json, _ := index.ToJson()
+	json, _ := index.ToJSON()
 	return json
 }
 
@@ -90,7 +91,7 @@ func Save(path string) error {
 	}
 	defer f.Close()
 
-	json, _ := index.ToJson()
+	json, _ := index.ToJSON()
 	encryptedJson, err := keyvault.VaultCrypter.Encrypt([]byte(json))
 	if err != nil {
 		log.WithFields(log.Fields{
