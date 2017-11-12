@@ -91,6 +91,9 @@ This will ask you for a new password and then overwrite the previous password on
 There are no real tests yet but it's in the works.
 [Zpass-lib](https://github.com/stormentt/zpass-lib) has tests though.
 
+## Code Signing
+Every code commit I make is signed by 6C7EF80BC4A6AD93. 
+
 ## Libraries used
 
 * [Cobra](https://github.com/spf13/cobra)
